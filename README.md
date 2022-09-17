@@ -1,4 +1,4 @@
-# SerServo
+ SerServo
 A serial line text protocol for a servo, using an arduino nano
 
 This is used to drive the pointer on a 20cm diameter prehistoric ampere-meter.
@@ -16,7 +16,13 @@ An empty command is ignored.
 
 P [x]
 	x defaults to 0. Moves the servo to a position 0...1000
+O
+	Report servo calibration.
+O min max
+	Set servo calibration. For identity use 0 100.
 
+B nn
+	Set LED brightness in percent for subsequent C commands, default 50.
 C
 	Set all LEDs to 255, 255, 255
 C x

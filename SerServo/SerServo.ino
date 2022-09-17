@@ -2,7 +2,7 @@
 // SerServo 0.1
 // (C) 2022 jw@owncloud.com, distribute under GPLv2 or ask
 //
-// Calibration of unit 1: min 36, max 102
+// Calibration of unit 1: min 33, max 102
 
 // include the Servo library
 #include <Servo.h>
@@ -12,13 +12,14 @@
 Servo servo;
 
 #define SERVO_PIN 9
-#define SERVO_MIN 36    // p 0 moves to the 0 positon on the display
-#define SERVO_MAX 102   // p 100 moves to the max value on the display
+#define SERVO_MIN_DEF 33p
+// p 0 moves to the 0 positon on the display
+#define SERVO_MAX_DEF 102   // p 100 moves to the max value on the display
 
 #define WS2812_PIN 6
 #define NUM_PIXELS 35  // how many LEDs we have
 
-#define VERSION "0.2"
+#define VERSION "0.3"
 
 #define DUMMY 0
 
@@ -54,6 +55,11 @@ struct cmd {
 
 unsigned char led_brightness[255];
 
+struct cfg {
+  int servo_min;
+  int servo_max;
+} cfg = { SERVO_MIN_DEF, SERVO_MAX_DEF };
+
 void do_cmd()
 {
   if (cmd.letter == '\0')
@@ -63,6 +69,23 @@ void do_cmd()
     {
       if (cmd.nval == 0) cmd.val[0] = 0;  // position defaults to 0
       moveto(cmd.val[0]);
+    }
+
+  else if (cmd.letter == 'O')
+    {
+      if (cmd.nval == 2)
+        {
+	   cfg.servo_min = cmd.val[0];
+	   cfg.servo_max = cmd.val[1];
+        }
+      else
+        {
+           Serial.print("servo_min=");
+	   Serial.print(cfg.servo_min);
+           Serial.print(" servo_max=");
+	   Serial.print(cfg.servo_max);
+           Serial.print("\n");
+        }
     }
     
   else if (cmd.letter == 'B')
@@ -104,6 +127,11 @@ void do_cmd()
 P [x]\n\
   x defaults to 0. Moves the servo to a position 0...100\n\
 \n\
+O\n\
+  Report servo calibration.\n\
+\n\
+O min max\n\
+  Set servo calibration. For identity use 0 100.\n\
 B nn\n\
   Set LED brightness in percent for subsequent C commands, default 50.\n\
 C\n\
@@ -140,7 +168,7 @@ void set_led(int i, int r, int g, int b)
 
 void moveto(int p)
 {
-  double x = p * 0.01 * (SERVO_MAX - SERVO_MIN) + SERVO_MIN;
+  double x = p * 0.01 * (cfg.servo_max - cfg.servo_min) + cfg.servo_min;
   servo.write(x);
 }
 
@@ -160,7 +188,11 @@ void setup()
     for (n = 0; n < NUM_PIXELS; n++)
        set_led(n, 40, 20, 0);  // dim orange
     Serial.print("default brightness 50%, default color 30 20 10\n");
-
+    Serial.print("servo calibration: min=");
+    Serial.print(cfg.servo_min);
+    Serial.print(" max=");
+    Serial.print(cfg.servo_max);
+    Serial.print("\n");
 }
 
 void loop()
