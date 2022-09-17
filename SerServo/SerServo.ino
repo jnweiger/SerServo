@@ -14,6 +14,8 @@ Servo servo;
 #define SERVO_PIN 9
 #define SERVO_MIN_DEF 33	// p 0 moves to the 0 positon on the display
 #define SERVO_MAX_DEF 102	// p 100 moves to the max value on the display
+#define SERVO_UPDATE_INCR 0.005	// how much to increment or decrement the servo per update() call. (speedlimit)
+#define SERVO_EPS	0.00001	// don't move, if within that tolerance.
 
 #define WS2812_PIN 6
 #define NUM_PIXELS 35  // how many LEDs we have
@@ -26,7 +28,7 @@ Servo servo;
 #define LED_BOTTOM_HALF 8
 #define LED_TOP_HALF 5
 
-#define VERSION "0.4"
+#define VERSION "0.5"
 
 #define DUMMY 0
 
@@ -60,12 +62,17 @@ struct cmd {
   int more;   // 1: last seen some digit
 } cmd = { '\0', { 0, 0, 0, 0, 0}, 0, 0 };
 
-unsigned char led_brightness[255];
+static unsigned char led_brightness[256];
 
 struct cfg {
   int servo_min;
   int servo_max;
 } cfg = { SERVO_MIN_DEF, SERVO_MAX_DEF };
+
+struct state {
+  double current;
+  double moveto;
+} state = { 40.0, .0 };		// we do a little movement when resetting.
 
 void do_cmd()
 {
@@ -94,20 +101,28 @@ void do_cmd()
            Serial.print("\n");
         }
     }
-    
+
   else if (cmd.letter == 'B')
     {
-       double b;
-       if (cmd.nval == 0) cmd.val[0] = 50;  // default brightness 50%
-       b = 0.01 * cmd.val[0];
-       if (b > 1.0) b = 1.0;
-
-       for (int n = 0; n < 256; n++)
+       if (cmd.nval == 0)
          {
-           Serial.print(int(n * b + .5));
-           Serial.print("\n");
-           led_brightness[n] = int(n * b + .5);
+           Serial.print(int(0.5+(100*led_brightness[255] >> 8)));
+	   Serial.print("\n");
          }
+       else
+	 {
+	   double b;
+	   b = 0.01 * cmd.val[0];
+	   if (b > 1.0) b = 1.0;
+
+	   for (int n = 0; n < 256; n++)
+	     {
+	       int v = int(n * b + .5);
+	       Serial.print(v);
+	       Serial.print("\n");
+	       led_brightness[n] = v;
+	     }
+	}
     }
 
   else if (cmd.letter == 'C')
@@ -176,23 +191,45 @@ void set_led(int i, int r, int g, int b)
 void moveto(int p)
 {
   double x = p * 0.01 * (cfg.servo_max - cfg.servo_min) + cfg.servo_min;
-  servo.write(x);
+  state.moveto = x;
+}
+
+void servo_update()
+{
+  double d = state.moveto - state.current;
+
+  if (d > SERVO_EPS)
+    {
+      if (d > SERVO_UPDATE_INCR) d = SERVO_UPDATE_INCR;
+      state.current += d;
+      servo.write(state.current);
+    }
+  else if (d < -SERVO_EPS)
+    {
+      if (d < -SERVO_UPDATE_INCR) d = -SERVO_UPDATE_INCR;
+      state.current += d;
+      servo.write(state.current);
+    }
+  // else: it is close enough. Switch off the PWM?
 }
 
 void setup()
 {
     Serial.begin(115200);
-    servo.attach(SERVO_PIN);
-    pixels.begin();
-    pixels.clear();
     Serial.print("SerServo v");
     Serial.print(VERSION);
     Serial.print("\n");
+
+    servo.attach(SERVO_PIN);
     moveto(0);
+
+    pixels.begin();
+    pixels.clear();
 
     int n;
     for (n = 0; n < 256; n++)
        led_brightness[n] = int(n * 0.5 + .5);
+
     // The led ring starts and end at the top of the meter.
     // to illuminate the lower part, we find the center, and pad LED_BOTTOM_HALF to both sides.
 
@@ -216,6 +253,7 @@ void setup()
 
 void loop()
 {
+  servo_update();
   while (Serial.available() > 0)
     {
       int c = Serial.read();
@@ -230,26 +268,26 @@ void loop()
         }
       else
         {
-    if (c == ' ' || c == '\t')
-      {
-        if (cmd.more)
-          { 
-            if (cmd.nval >= 5) { cmd.letter = '\0'; usage("Too many numbers"); continue; }
-      cmd.nval++;
-    }
-        cmd.more = 0;
-        continue;
-      }
-    if (c == '\n' || c == '\r')
-      {
-        if (cmd.more) cmd.nval++;
-        do_cmd();
-        continue;
-      }
-    if (c < '0' || c > '9') { cmd.letter = '\0'; usage("Digit expected"); continue; }
-    cmd.val[cmd.nval] = 10 * cmd.val[cmd.nval] + c - '0';
-    cmd.more = 1;
-  }
+          if (c == ' ' || c == '\t')
+	    {
+	      if (cmd.more)
+		{
+		  if (cmd.nval >= 5) { cmd.letter = '\0'; usage("Too many numbers"); continue; }
+	          cmd.nval++;
+	        }
+              cmd.more = 0;
+              continue;
+	    }
+          if (c == '\n' || c == '\r')
+            {
+              if (cmd.more) cmd.nval++;
+              do_cmd();
+              continue;
+            }
+          if (c < '0' || c > '9') { cmd.letter = '\0'; usage("Digit expected"); continue; }
+          cmd.val[cmd.nval] = 10 * cmd.val[cmd.nval] + c - '0';
+          cmd.more = 1;
+        }
     }
 }
 
@@ -283,7 +321,7 @@ int serial_read()
   char buf[4];
   int c = read(0, (void *)&buf, 1);
   if (c != 1) return 0;
-  return buf[0]; 
+  return buf[0];
 }
 
 void servo_moveto(int p)
