@@ -12,14 +12,21 @@
 Servo servo;
 
 #define SERVO_PIN 9
-#define SERVO_MIN_DEF 33p
-// p 0 moves to the 0 positon on the display
-#define SERVO_MAX_DEF 102   // p 100 moves to the max value on the display
+#define SERVO_MIN_DEF 33	// p 0 moves to the 0 positon on the display
+#define SERVO_MAX_DEF 102	// p 100 moves to the max value on the display
 
 #define WS2812_PIN 6
 #define NUM_PIXELS 35  // how many LEDs we have
 
-#define VERSION "0.3"
+#define LED_DIM_ORANGE 40, 20, 0
+#define LED_DIM_BLUE 0, 0, 40
+
+#define LED_BOTTOM_DEFAULT_COLOR LED_DIM_ORANGE
+#define LED_TOP_DEFAULT_COLOR LED_DIM_BLUE
+#define LED_BOTTOM_HALF 8
+#define LED_TOP_HALF 5
+
+#define VERSION "0.4"
 
 #define DUMMY 0
 
@@ -181,12 +188,24 @@ void setup()
     Serial.print("SerServo v");
     Serial.print(VERSION);
     Serial.print("\n");
+    moveto(0);
 
     int n;
     for (n = 0; n < 256; n++)
        led_brightness[n] = int(n * 0.5 + .5);
-    for (n = 0; n < NUM_PIXELS; n++)
-       set_led(n, 40, 20, 0);  // dim orange
+    // The led ring starts and end at the top of the meter.
+    // to illuminate the lower part, we find the center, and pad LED_BOTTOM_HALF to both sides.
+
+#ifdef LED_BOTTOM_HALF
+    for (n = ((NUM_PIXELS>>1)-LED_BOTTOM_HALF+1); n < ((NUM_PIXELS>>1)+LED_BOTTOM_HALF); n++)
+       set_led(n, LED_BOTTOM_DEFAULT_COLOR);
+#endif
+#ifdef LED_TOP_HALF
+    for (n = 0; n < LED_TOP_HALF; n++)
+       set_led(n, LED_TOP_DEFAULT_COLOR);
+    for (n = NUM_PIXELS - LED_TOP_HALF; n < NUM_PIXELS; n++)
+       set_led(n, LED_TOP_DEFAULT_COLOR);  // dim orange
+#endif
     Serial.print("default brightness 50%, default color 30 20 10\n");
     Serial.print("servo calibration: min=");
     Serial.print(cfg.servo_min);
