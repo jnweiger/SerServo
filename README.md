@@ -30,23 +30,28 @@ The servo is moved to position 0, the bottom half of the led strip starts glowin
 
 At power down, we "plan to" return the servo to position 0 before power really runs out.
 To do so, we use the energy stored in the big 5600 uF capacitor together with a hardware modification on the arduino nano board:
-- connect pin D12 with the positive end of the 4.7uF onboard capacitor. This can be done with a short piece of wire soldered onto the pads, which are only 2mm apart.
-At powerloss, the shottky diode immediately disconnects USB power and the +5V rails. At pin D12 we detect the USB power loss, while the +5V rails still provide power. This allows us, to send one last motor moveto(0) command and hope for the best.
+- Connect pin D12 with the positive end of the 4.7uF onboard capacitor. This can be done with a short piece of wire soldered onto the pads, which are only 2mm apart.
+- Bridge the capacitor with a 1k discharge resistor.
 
-This mimics what an original analog hardware meter would do. It also helps us saving power at the next startup, as the servo is already at the desired position.
+At powerloss, the schottky diode immediately disconnects USB power and the +5V rails. At pin D12 we detect the USB power loss (due to the discarge resistor), while the +5V rails still provide power. This allows us, to send one last motor moveto(0) command (at full speed!) and hope for the best.
+
+This mimics what an original analog hardware meter would do. It might also help us to savw power at the next startup, as the servo is already at the desired position.
 
 ## Commands
 Commmands start with a letter, can contain any amount of whitespace (ignored).
 Then (optionally) decimal numbers follow, separated by whitespace, the command ends in a newline and or carriage retun
 An empty command is ignored.
 
+<pre>
 P [x]
 	x defaults to 0. Moves the servo to a position 0...1000
 O
-	Report servo calibration.
+	Report servo calibration offsets.
 O min max
-	Set servo calibration. For identity use 0 100.
+	Set servo calibration offsets. For identity use: O 0 100.
 
+B
+	Report LED brightness setting.
 B nn
 	Set LED brightness in percent for subsequent C commands, default 50.
 C
@@ -56,7 +61,7 @@ C x
 C r g b
 	Sets the RGB value of all LEDs
 C r g b n
-	Set only LED n to the r g b value. n in 0..30)
+	Set only LED n to the r g b value. n in 0..34)
 	All other LEDs remain as they are.
 C r g b n m
 	Set LEDs n to m (inclusive)
@@ -64,4 +69,4 @@ C r g b n m
 H
 ?
 	Print the above command summary.
-
+</pre>
