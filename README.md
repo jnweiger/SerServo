@@ -27,6 +27,9 @@ In my case, a piece of 35 LEDs nicely fits around inside circumference. You can 
 I designed a 3D-printed mounting ring for this. LEDs sit on th eoutside of the ring, facing inwards, so make sure to use some material that shiens through nicely. I used white PETG, which seems good enough, although transparent should work better.
 The adhesive side of the strip then used to wrap some other tape around the strip, so that it is held in place on the ring.
 
+![Image](photos/photo_2022-09-18_16-17-43.jpg)
+![Image](photos/photo_2022-09-18_16-28-13.jpg)
+
 ## USB-serial
 
 The baud rate is 115200, no parity, two stop bits.
