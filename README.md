@@ -23,8 +23,8 @@ The data pin of the WS2812 connects via a 330 Ohm resistor to arduino pin D6.
 ## Mechanics
 
 In my case, a piece of 35 LEDs nicely fits around inside circumference. You can glue the strip with its adhesive side directly to the cover. It may or may not stick well enough. Especially during assembly, when the cables move, it might come off.
-I designed a 3D-printed mounting ring for this. LEDs sit on th eoutside of the ring, facing inwards, so make sure to use some material that shiens through nicely. I used white PETG, which seems good enough, although transparent should work better.
-The adhesive side of the strip then used to wrap some other tape around the strip, so that it is held in place on the ring.
+I designed a 3D-printed mounting ring for this. LEDs sit on the outside of the ring, facing inwards, so make sure to use some material that shines through nicely. I used white PETG, which seems good enough, although transparent should work better.
+The adhesive side of the strip is then only used to wrap some other tape around the strip, so that it is held in place on the ring.
 
 ![Image](photos/photo_2022-09-18_16-17-43.jpg)
 ![Image](photos/photo_2022-09-18_16-28-13.jpg)
@@ -35,15 +35,15 @@ The baud rate is 115200, no parity, two stop bits.
 
 ### Power supply
 To simplify the circuit, we try to use the USB line also as a 5V power source.
-According to https://www.arduino.cc/en/uploads/Main/ArduinoNano30Schematic.pdf, USB is coupled to the onboard +5V pins with a 0.5A Schottky diode MBR0520, so the total current draw should not exceed 0.5A. The Schottky diode is actually there to allow us to connect both USB power and if needed an external
+According to https://www.arduino.cc/en/uploads/Main/ArduinoNano30Schematic.pdf, USB is coupled to the onboard +5V pins with a 0.5A Schottky diode MBR0520, so the total current draw should not exceed this value. The Schottky diode is actually there to allow us to connect both USB power and if needed an external
 5V power supply without any problems.
 
 The micro-servo can draw up to 1A, when under load or when moving at high speed.
-The LED-strip can use max 60mA per LED, when all 3 channels R,G,B are at full brightness. This is a total of 2.1A
+The LED-strip can use max 60mA per LED, when all 3 channels R,G,B are at full brightness. This is a total of 2.1A + 1A ... -- which would not work via USB power.
 
 #### Precautions
-- the arduino nano schematics has a 100 nF and 4.7 uF capacitor on the USB side.
-- we provide an external 5600 uF capacitor to buffer motor spikes.
+- The arduino nano schematics has a 100 nF and 4.7 uF capacitor on the USB side.
+- We provide an external 5600 uF capacitor to buffer motor spikes.
 - There is a default B brightness setting, that dims all values to below 50%.
 - The default illumniation powers only the bottom half of the ring, at a dim orange.
 - We use a custom servo driver that only sends a few pulses when moving, then stops the PWM, so that the motor gets powered down.
