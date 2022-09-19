@@ -1,9 +1,8 @@
- SerServo
+# SerServo
 A serial line text protocol for a servo, using an arduino nano
 
 This is used to drive the pointer on a 20cm diameter prehistoric ampere-meter.
-It also features a ws2812 led-strip - also controlled trhough the serial protocol, and some 3d printed parts to implement this particular usecase of SerServo
-
+It also features a ws2812 led-strip (also controlled through the serial protocol), and some 3d printed parts to implement this particular usecase of SerServo. Yes, the ampere-meter is now remote controlled ( - aka it is a fake).
 
 ## Wiring
 
@@ -12,7 +11,7 @@ e.g. 3 male ends fit nicely into the standard servo connector, and the three los
 Therefore I populated (ca. half of) the pin holes with pinheaders. The servo is usually color coded brown, red, orange.
 Brown connects to a GND pin, red to +5V, and orange to D9.
 
-The WS2812 LED strip comes with a round plug for power and a 3pin male connector. 
+The WS2812 LED strip comes with a round plug for power and a 3pin male connector.
 The round plug is great for an external 5V 3A power supply, which is optional, since when keeping an eye of power consumption, the USB connector is sufficient. But when pushing LED brightness to its limits, and frantically driving the servo back and forth, a total of 3A migt be needed to avoid spurious resets.
 
 Connect GND and +5V of the strip to the arduino board (even if you plan to use an external power supply)
@@ -36,7 +35,7 @@ The baud rate is 115200, no parity, two stop bits.
 
 ### Power supply
 To simplify the circuit, we try to use the USB line also as a 5V power source.
-According to https://www.arduino.cc/en/uploads/Main/ArduinoNano30Schematic.pdf, USB is coupled to the onboard +5V pins with a 0.5A Schottky diode MBR0520, so the total current draw should not exceed 0.5A. The Schottky diode is actually there to allow us to connect both USB power and if needed an external 
+According to https://www.arduino.cc/en/uploads/Main/ArduinoNano30Schematic.pdf, USB is coupled to the onboard +5V pins with a 0.5A Schottky diode MBR0520, so the total current draw should not exceed 0.5A. The Schottky diode is actually there to allow us to connect both USB power and if needed an external
 5V power supply without any problems.
 
 The micro-servo can draw up to 1A, when under load or when moving at high speed.
